@@ -10,4 +10,12 @@ namespace WolfyBot.Core.Enums
     {
         NONE,
     }
+    public enum NetworkEnum
+    {
+        LOGGING_IN,
+        LOGGED_HUB,
+        SWITCHING_TO_GAME,
+        LOGGED_GAME,
+        DISCONNECTED
+    }
 }

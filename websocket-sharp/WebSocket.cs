@@ -55,6 +55,7 @@ using System.Text;
 using System.Threading;
 using WebSocketSharp.Net;
 using WebSocketSharp.Net.WebSockets;
+using WolfyBot;
 
 namespace WebSocketSharp
 {
@@ -2181,7 +2182,7 @@ namespace WebSocketSharp
         {
             var req = createHandshakeRequest();
             var res = sendHttpRequest(req, 90000);
-            Console.WriteLine("Web Socket secret : " + res.Headers["Sec-WebSocket-Accept"]);
+            Program.WriteColoredLine("HandShake Web Socket secret : " + res.Headers["Sec-WebSocket-Accept"], ConsoleColor.Gray);
             if (res.IsUnauthorized)
             {
                 var chal = res.Headers["WWW-Authenticate"];

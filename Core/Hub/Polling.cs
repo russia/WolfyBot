@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using WolfyBot.Core.Enums;
 using WolfyBot.Helper;
 using WolfyBot.Helpers;
 
@@ -59,6 +60,7 @@ namespace WolfyBot
                 response = response.Remove(response.Length - 1, 1);
             }
             var obj = JObject.Parse(response);
+            Program.WriteColoredLine($"[] Got SID : {obj["sid"].ToString()}",ConsoleColor.Green);
             return obj["sid"].ToString();
         }
 
@@ -97,7 +99,7 @@ namespace WolfyBot
                 };
             var responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid, HeaderAccessToken);
             string response = responsetoken.Content.ReadAsStringAsync().Result;
-            Uri uri = new Uri("https://wolfy.fr/socket.io/?token=8cb85bca-72bb-4722-bc16-1548e2e45eed&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid);
+            Uri uri = new Uri("https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid);
             IEnumerable<Cookie> responseCookies = cookieContainer.GetCookies(uri).Cast<Cookie>();
             foreach (Cookie cookie in responseCookies)
             {
@@ -107,6 +109,7 @@ namespace WolfyBot
             client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("connect.sid", "s%3AvVytm5pAgIuNbfJtvEyekMl238U7LZOS.6zg5vpz0xDe9hq8pH23RvRIaC8%2F6dbEyedSbrPbLcsU"));
             client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("__stripe_mid", "3992e4be-4eb7-4430-872a-479e1e8d514f8187c8"));
             client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("__stripe_sid", "fdd89f83-cf7e-45f9-8233-ba19746ff587531737"));
+            client.CurrentNetworkState = NetworkEnum.LOGGING_IN;
             return response;
         }
     }
