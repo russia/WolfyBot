@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace WolfyBot.Core.Types
+﻿namespace WolfyBot.Core.Types
 {
-    class Roles
+    internal class Roles
     {
     }
 }

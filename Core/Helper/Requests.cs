@@ -62,15 +62,16 @@ namespace WolfyBot.Helpers
             {
                 httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
             }
-            try {
+            try
+            {
                 var message = await httpClient.GetAsync(uri);
                 return message;
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 //Console.WriteLine(ex.Message);
                 return null;
             }
-            
         }
     }
 }
