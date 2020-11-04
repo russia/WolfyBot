@@ -17,6 +17,19 @@ namespace WolfyBot.Core.Helper
 
         public static string ToCamelCase(this string text) => $"{char.ToLower(text[0])}{text.Substring(1)}";
 
+        public static string CleanPacket(string startwith, string endwith, string message)
+        {
+            while (!message.StartsWith(startwith)) //TODO improve this part
+            {
+                message = message.Remove(0, 1);
+            }
+            while (!message.EndsWith(endwith))
+            {
+                message = message.Remove(message.Length - 1, 1);
+            }
+            return message;
+        }
+
         public static string ConcatCopy(this string str, int times)
         {
             var builder = new StringBuilder(str.Length * times);

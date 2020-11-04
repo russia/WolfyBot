@@ -1,0 +1,4 @@
+﻿-Revoir la lecture des packets (elle marche au hub mais pas en game)
+-Revoir la partie polling
+-Améliorer le code
+-Game hub object

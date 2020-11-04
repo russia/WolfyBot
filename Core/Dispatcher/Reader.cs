@@ -31,27 +31,34 @@ namespace WolfyBot.Core.Dispatcher
 
         public static void MessageReader(Client client, string message)
         {
-            while (!message.StartsWith("[")) //TODO improve this part
-            {
-                message = message.Remove(0, 1);
-            }
-            while (!message.EndsWith("]"))
-            {
-                message = message.Remove(message.Length - 1, 1);
-            }
+            Console.WriteLine(message);
+            message = WolfyBot.Core.Helper.Extensions.CleanPacket("[", "]", message);
             string packetname = message.Substring(2, message.IndexOf(",{") - 3);
             string json = message.Replace($"[\"{packetname}\",", "");
             json = json.Replace("]", "");
-            
+
             var Type = JObject.Parse(json);
-            if (Type["type"] == null || !Methods.Where(x => x.Key == Type["type"].ToString()).Any()) // en attendant on return les apcket qui n'ont pas de type
+
+            if (Type["type"] == null)
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV [Name : {packetname} | Type : NOTYPE] -> {json}", ConsoleColor.DarkCyan);
+                foreach (var method in Methods.Where(x => x.Key.ToLower() == packetname.ToLower())) // on cherche si il y a un handler avec le meme nom de message
+                {
+                    method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(packetname.ToLower(), Type) });
+                }
                 return;
+            }
+
+            if (!Methods.Where(x => x.Key == Type["type"].ToString()).Any())
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV Message not registered [] -> {message}", ConsoleColor.Yellow);
+                return;
+            }
 
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV [Name : {packetname} | Type : {Type["type"]}] -> {json}", ConsoleColor.DarkCyan);
             foreach (var method in Methods.Where(x => x.Key == Type["type"].ToString())) // on cherche si il y a un handler avec le meme nom de message
             {
-
-                method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type["type"].ToString(),Type) });
+                method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type["type"].ToString(), Type) });
             }
 
             //En gros il faut faire une classe objet pour chaque type et la call a partir du type trouvé

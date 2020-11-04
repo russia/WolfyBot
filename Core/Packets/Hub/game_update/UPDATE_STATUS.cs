@@ -4,16 +4,22 @@ namespace WolfyBot.Core.Packets.Hub.game_update
 {
     public class UPDATE_STATUS : Message
     {
-        [JsonProperty("id")]
         public string Id { get; set; }
 
-        [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("value")]
         public int Value { get; set; }
 
-        [JsonProperty("serious")]
         public bool Serious { get; set; }
+
+        public UPDATE_STATUS() { }
+
+        public UPDATE_STATUS(string id, string type, int value, bool serious)
+        {
+            Id = id;
+            Type = type;
+            Value = value;
+            Serious = serious;
+        }
     }
 }

@@ -74,14 +74,7 @@ namespace WolfyBot
             else
                 responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/instance/" + worldinstanceid + "/socket.io/?token=" + UserToken + "&gameId=" + worldid + "&EIO=3&transport=polling&t=" + randstring, HeaderAccessToken);
             string response = responsetoken.Content.ReadAsStringAsync().Result;
-            while (!response.StartsWith("{")) //TODO improve this part
-            {
-                response = response.Remove(0, 1);
-            }
-            while (!response.EndsWith("}"))
-            {
-                response = response.Remove(response.Length - 1, 1);
-            }
+            response = WolfyBot.Core.Helper.Extensions.CleanPacket("{", "}", response);
             var obj = JObject.Parse(response);
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Got SID : {obj["sid"].ToString()}", ConsoleColor.Green);
             return obj["sid"].ToString();
