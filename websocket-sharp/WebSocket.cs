@@ -1348,7 +1348,7 @@ namespace WebSocketSharp
         }
 
         // As client
-        private bool connect()
+        private bool connect(string sid)
         {
             if (_readyState == WebSocketState.Open)
             {
@@ -1394,7 +1394,7 @@ namespace WebSocketSharp
 
                 try
                 {
-                    doHandshake();
+                    doHandshake(sid);
                 }
                 catch (Exception ex)
                 {
@@ -1530,10 +1530,10 @@ namespace WebSocketSharp
         }
 
         // As client
-        private void doHandshake()
+        private void doHandshake(string sid)
         {
             setClientStream();
-            var res = sendHandshakeRequest();
+            var res = sendHandshakeRequest(sid);
 
             string msg;
             if (!checkHandshakeResponse(res, out msg))
@@ -2178,11 +2178,15 @@ namespace WebSocketSharp
         }
 
         // As client
-        private HttpResponse sendHandshakeRequest()
+        private HttpResponse sendHandshakeRequest(string sid)
         {
             var req = createHandshakeRequest();
+            foreach (var cook in req.Cookies)
+            {
+                Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Cookies : " + cook.Name + " -> " + cook.Value);
+            }
             var res = sendHttpRequest(req, 90000);
-            Program.WriteColoredLine("HandShake Web Socket secret : " + res.Headers["Sec-WebSocket-Accept"], ConsoleColor.Gray);
+            Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] HandShake Web Socket secret : " + res.Headers["Sec-WebSocket-Accept"], ConsoleColor.Gray);
             if (res.IsUnauthorized)
             {
                 var chal = res.Headers["WWW-Authenticate"];
@@ -2242,10 +2246,9 @@ namespace WebSocketSharp
                     _secure = uri.Scheme == "wss";
 
                     setClientStream();
-                    return sendHandshakeRequest();
+                    return sendHandshakeRequest(sid);
                 }
             }
-
             return res;
         }
 
@@ -3490,7 +3493,7 @@ namespace WebSocketSharp
         ///   A series of reconnecting has failed.
         ///   </para>
         /// </exception>
-        public void Connect()
+        public void Connect(string sid)
         {
             if (!_client)
             {
@@ -3510,7 +3513,7 @@ namespace WebSocketSharp
                 throw new InvalidOperationException(msg);
             }
 
-            if (connect())
+            if (connect(sid))
                 open();
         }
 
@@ -3545,33 +3548,33 @@ namespace WebSocketSharp
         /// </exception>
         public void ConnectAsync()
         {
-            if (!_client)
-            {
-                var msg = "This instance is not a client.";
-                throw new InvalidOperationException(msg);
-            }
+            //if (!_client)
+            //{
+            //    var msg = "This instance is not a client.";
+            //    throw new InvalidOperationException(msg);
+            //}
 
-            if (_readyState == WebSocketState.Closing)
-            {
-                var msg = "The close process is in progress.";
-                throw new InvalidOperationException(msg);
-            }
+            //if (_readyState == WebSocketState.Closing)
+            //{
+            //    var msg = "The close process is in progress.";
+            //    throw new InvalidOperationException(msg);
+            //}
 
-            if (_retryCountForConnect > _maxRetryCountForConnect)
-            {
-                var msg = "A series of reconnecting has failed.";
-                throw new InvalidOperationException(msg);
-            }
+            //if (_retryCountForConnect > _maxRetryCountForConnect)
+            //{
+            //    var msg = "A series of reconnecting has failed.";
+            //    throw new InvalidOperationException(msg);
+            //}
 
-            Func<bool> connector = connect;
-            connector.BeginInvoke(
-              ar =>
-              {
-                  if (connector.EndInvoke(ar))
-                      open();
-              },
-              null
-            );
+            //Func<bool> connector = connect;
+            //connector.BeginInvoke(
+            //  ar =>
+            //  {
+            //      if (connector.EndInvoke(ar))
+            //          open();
+            //  },
+            //  null
+            //);
         }
 
         /// <summary>

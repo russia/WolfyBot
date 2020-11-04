@@ -19,9 +19,9 @@ namespace WolfyBot.Core.MessageReader
             Assembly assembly = typeof(Message).GetTypeInfo().Assembly; // on get l'assembly ou il y a les messages
             foreach (var type in assembly.GetTypes().ToArray()) // on cherche tout les types qui contiennent des methodes avec l'attribute Message
             {
-                Console.WriteLine(type.GetTypeInfo());
+                //Console.WriteLine(type.GetTypeInfo());
             }
-            Console.ReadKey();
+            // Console.ReadKey();
         }
 
 

@@ -84,7 +84,8 @@ namespace WebSocketSharp
     }
 
     public CookieCollection Cookies {
-      get {
+            get
+            {
         if (_cookies == null)
           _cookies = Headers.GetCookies (false);
 

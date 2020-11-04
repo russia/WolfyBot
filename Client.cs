@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
 using WolfyBot.Core.Enums;
-using WolfyBot.Core.MessageReader;
 
 namespace WolfyBot
 {
@@ -17,13 +17,25 @@ namespace WolfyBot
         public StatesEnum ClientStatus;
         public NetworkEnum CurrentNetworkState;
         public bool Disposed = false;
+        public Polling Poll = null;
+        public string CurrentGameId = "";
+        public string CurrentGameInstanceId = "";
 
         public Client(string userToken)
         {
             this.ClientStatus = StatesEnum.NONE;
             this.UserToken = userToken;
-            Polling Poll = new Polling(UserToken, this);
-            Connection(SID).Wait();
+            Poll = new Polling(UserToken, this);
+            Program.WriteColoredLine($"[{ DateTime.Now.ToString("HH:mm:ss")}] Connecting to Hub..", ConsoleColor.Magenta);
+            WsConnection(SID).Wait();
+        }
+
+        public void ConnectToWorld(string worldid, string worldinstanceid)
+        {
+            Program.WriteColoredLine($"[{ DateTime.Now.ToString("HH:mm:ss")}] Switching to world..", ConsoleColor.Magenta);
+            Poll.WorldPolling(this, worldid, worldinstanceid);
+            Thread.Sleep(500);
+            WsConnection(SID, true, worldid, worldinstanceid).Wait();
         }
 
         private void SetupPing(WebSocket ws)
@@ -32,16 +44,25 @@ namespace WolfyBot
             Timer timer = null;
             timer = new Timer(state =>
             {
-                SendMessage("2");
-                //SendMessage("42/hub,[\"socialMessage\",{\"receiverId\":\"461ed404-2e04-4601-8162-3b43b4a069ef\", \"text\":\"Hey :)\"}]");
-                timer.Change(interval, Timeout.Infinite);
+                if (!ws.IsConnected)
+                    timer.Dispose();
+                else
+                {
+                    SendMessage("2");
+                    timer.Change(interval, Timeout.Infinite);
+                }
             },
             null, 25000, Timeout.Infinite);
         }
 
-        private async Task Connection(string sid)
+        private async Task WsConnection(string sid, bool world = false, string worldid = null, string worldinstanceid = null)
         {
-            using (ws = new WebSocket(url: "wss://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=websocket&sid=" + sid))
+            string Url;
+            if (!world)
+                Url = "wss://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=websocket&sid=" + sid;
+            else
+                Url = $"wss://wolfy.fr/instance/{worldinstanceid}/socket.io/?token={UserToken}&gameId={worldid}&EIO=3&transport=websocket&sid={sid}";
+            using (ws = new WebSocket(url: Url))
             {
                 SetupPing(ws);
                 ws.Origin = "https://wolfy.fr";
@@ -49,13 +70,14 @@ namespace WolfyBot
                 {
                     ws.SetCookie(cook);
                 }
+
                 ws.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
                 ws.OnMessage += client_OnMessage;
                 ws.OnError += client_OnError;
                 ws.OnClose += client_OnClose;
                 ws.OnOpen += client_OnOpen;
                 ws.Compression = CompressionMethod.Deflate;
-                ws.Connect();
+                ws.Connect(sid);
                 SendMessage("2probe");
                 SendMessage("5");
                 Console.ReadKey(true);
@@ -67,21 +89,46 @@ namespace WolfyBot
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Connection opened at " + ws.Url, ConsoleColor.Blue);
             CurrentNetworkState = NetworkEnum.LOGGED_HUB;
-            
         }
 
         public void client_OnMessage(object sender, MessageEventArgs e)
         {
             string response = e.Data;
-            if (!response.Contains("hydrateFriendRequests") && response != "3probe" && response !=  "3") // on remove les messages ws
-                Reader.MessageReader(response);
-            else
-                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV -> {response}", ConsoleColor.DarkCyan);
+            //if (!response.Contains("hydrateFriendRequests") && response != "3probe" && response !=  "3") // on remove les messages ws
+            //    Reader.MessageReader(response);
+            //else
+            Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV -> {response}", ConsoleColor.DarkCyan);
+
+            // TEMP
+            //
+            if (response.Contains("game_create"))
+            {
+                string message = response;
+                while (!message.StartsWith("[")) //TODO improve this part
+                {
+                    message = message.Remove(0, 1);
+                }
+                while (!message.EndsWith("]"))
+                {
+                    message = message.Remove(message.Length - 1, 1);
+                }
+                string packetname = message.Substring(2, message.IndexOf(",{") - 3);
+                string json = message.Replace($"[\"{packetname}\",", "");
+                json = json.Replace("]", "");
+                var jsonobj = JObject.Parse(json);
+                string id = jsonobj["id"].ToString();
+                string instanceId = jsonobj["instanceId"].ToString();
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game has been created, joining it ! GameID : {id}, GameInstanceID : {instanceId}", ConsoleColor.Cyan);
+                Quit();
+                ConnectToWorld(id, instanceId);
+            }
         }
 
         public void client_OnClose(object sender, CloseEventArgs e)
         {
             string response = e.Reason;
+            if (response.Length == 0)
+                return;
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] client_OnClose : " + response, ConsoleColor.Red);
         }
 
@@ -105,6 +152,15 @@ namespace WolfyBot
                 ws?.Send(msg);
             }
             catch { }
+        }
+
+        public void Quit()
+        {
+            ws.Close();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

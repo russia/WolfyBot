@@ -14,19 +14,20 @@ namespace WolfyBot
 {
     public class Polling
     {
-        public CookieContainer cookieContainer = null;
+        public CookieContainer cookieContainer = new CookieContainer();
+
+        public HttpClientHandler hq = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+        };
+
         public HttpClient WebClient = null;
         public string UserToken;
 
         public Polling(string userToken, Client client)
         {
             this.UserToken = userToken;
-            cookieContainer = new CookieContainer();
-            HttpClientHandler hq = new HttpClientHandler
-            {
-                AutomaticDecompression = DecompressionMethods.All,
-                CookieContainer = cookieContainer
-            };
+            hq.CookieContainer = cookieContainer;
             hq.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
             WebClient = new HttpClient(hq);
             string rand = StringHelper.RandomString(7);
@@ -37,7 +38,25 @@ namespace WolfyBot
             client.SID = sid;
         }
 
-        private async Task<string> GetSID(string randstring)
+        public async void WorldPolling(Client client, string worldid, string worldinstanceid)
+        {
+            cookieContainer = new CookieContainer();
+            hq = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.All,
+            };
+            hq.CookieContainer = cookieContainer;
+            hq.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+            WebClient = new HttpClient(hq);
+            string rand = StringHelper.RandomString(7);
+            string sid = await GetSID(rand, true, worldid, worldinstanceid);
+            await GetAfterPost(rand, sid, client, true, worldid, worldinstanceid);
+            client.CurrentGameId = worldid;
+            client.CurrentGameInstanceId = worldinstanceid;
+            client.SID = sid;
+        }
+
+        private async Task<string> GetSID(string randstring, bool world = false, string worldid = null, string worldinstanceid = null)
         {
             Dictionary<string, string> HeaderAccessToken = new Dictionary<string, string>
                 {
@@ -49,7 +68,11 @@ namespace WolfyBot
                     {"connection","keep-alive"},
                     {"referer","https://wolfy.fr/play"},
                 };
-            var responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring, HeaderAccessToken);
+            HttpResponseMessage responsetoken;
+            if (!world)
+                responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring, HeaderAccessToken);
+            else
+                responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/instance/" + worldinstanceid + "/socket.io/?token=" + UserToken + "&gameId=" + worldid + "&EIO=3&transport=polling&t=" + randstring, HeaderAccessToken);
             string response = responsetoken.Content.ReadAsStringAsync().Result;
             while (!response.StartsWith("{")) //TODO improve this part
             {
@@ -60,14 +83,13 @@ namespace WolfyBot
                 response = response.Remove(response.Length - 1, 1);
             }
             var obj = JObject.Parse(response);
-            Program.WriteColoredLine($"[] Got SID : {obj["sid"].ToString()}",ConsoleColor.Green);
+            Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Got SID : {obj["sid"].ToString()}", ConsoleColor.Green);
             return obj["sid"].ToString();
         }
 
         private async Task<string> UseSID(string randstring, string sid)
         {
             Console.WriteLine(randstring + "  " + sid);
-
             Dictionary<string, string> HeaderAccessToken = new Dictionary<string, string>
                 {
                     {"Host","wolfy.fr"},
@@ -85,7 +107,7 @@ namespace WolfyBot
             return responsetoken.Content.ReadAsStringAsync().Result;
         }
 
-        private async Task<string> GetAfterPost(string randstring, string sid, Client client)
+        private async Task<string> GetAfterPost(string randstring, string sid, Client client, bool world = false, string worldid = null, string worldinstanceid = null)
         {
             Dictionary<string, string> HeaderAccessToken = new Dictionary<string, string>
                 {
@@ -97,19 +119,30 @@ namespace WolfyBot
                     {"connection","keep-alive"},
                     {"referer","https://wolfy.fr/play"},
                 };
-            var responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid, HeaderAccessToken);
+            HttpResponseMessage responsetoken;
+            Uri uri;
+            if (!world)
+            {
+                responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid, HeaderAccessToken);
+                uri = new Uri("https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid);
+            }
+            else
+            {
+                responsetoken = await Requests.Get(WebClient, "https://wolfy.fr/instance/" + worldinstanceid + "/socket.io/?token=" + UserToken + "&gameId=" + worldid + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid, HeaderAccessToken);
+                uri = new Uri("https://wolfy.fr/instance/" + worldinstanceid + "/socket.io/?token=" + UserToken + "&gameId=" + worldid + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid);
+            }
             string response = responsetoken.Content.ReadAsStringAsync().Result;
-            Uri uri = new Uri("https://wolfy.fr/socket.io/?token=" + UserToken + "&EIO=3&transport=polling&t=" + randstring + ".0" + "&sid=" + sid);
+
             IEnumerable<Cookie> responseCookies = cookieContainer.GetCookies(uri).Cast<Cookie>();
+            client.HandShakeCookies.Clear();
             foreach (Cookie cookie in responseCookies)
             {
+                Console.WriteLine($"[{DateTime.Now.ToString("HH: mm:ss")}] We got cookies : " + cookie.Name + " -> " + cookie.Value);
                 client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie(cookie.Name, cookie.Value));
             }
-            client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("io", sid));
-            client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("connect.sid", "s%3AvVytm5pAgIuNbfJtvEyekMl238U7LZOS.6zg5vpz0xDe9hq8pH23RvRIaC8%2F6dbEyedSbrPbLcsU"));
-            client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("__stripe_mid", "3992e4be-4eb7-4430-872a-479e1e8d514f8187c8"));
-            client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie("__stripe_sid", "fdd89f83-cf7e-45f9-8233-ba19746ff587531737"));
             client.CurrentNetworkState = NetworkEnum.LOGGING_IN;
+            WebClient.Dispose();
+            WebClient = null;
             return response;
         }
     }
