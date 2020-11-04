@@ -33,6 +33,7 @@ namespace WolfyBot
             timer = new Timer(state =>
             {
                 SendMessage("2");
+                //SendMessage("42/hub,[\"socialMessage\",{\"receiverId\":\"461ed404-2e04-4601-8162-3b43b4a069ef\", \"text\":\"Hey :)\"}]");
                 timer.Change(interval, Timeout.Infinite);
             },
             null, 25000, Timeout.Infinite);
@@ -66,12 +67,13 @@ namespace WolfyBot
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Connection opened at " + ws.Url, ConsoleColor.Blue);
             CurrentNetworkState = NetworkEnum.LOGGED_HUB;
+            
         }
 
         public void client_OnMessage(object sender, MessageEventArgs e)
         {
             string response = e.Data;
-            if (!response.Contains("hydrateFriendRequests") && response != "3probe" && response !=  "3")
+            if (!response.Contains("hydrateFriendRequests") && response != "3probe" && response !=  "3") // on remove les messages ws
                 Reader.MessageReader(response);
             else
                 Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV -> {response}", ConsoleColor.DarkCyan);

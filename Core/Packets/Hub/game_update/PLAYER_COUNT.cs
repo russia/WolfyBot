@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WolfyBot.Core.Packets.Hub
+namespace WolfyBot.Core.Packets.Hub.game_update
 {
-    public class game_update : Message
+    public class PLAYER_COUNT : Message
     {
         [JsonProperty("id")]
         public string Id { get; set; }
