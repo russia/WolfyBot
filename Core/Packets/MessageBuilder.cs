@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace WolfyBot.Core.Packets
 {
     public static class MessageBuilder
     {
-        private static readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        private static readonly List<Type> _types = new List<Type>();
 
         public static void Initialize()
         {
@@ -17,23 +18,27 @@ namespace WolfyBot.Core.Packets
             {
                 if (!typeof(Message).IsAssignableFrom(type) || type == typeof(Message))
                     continue;
-
-                var typeName = type.Name;
-                _types.Add(typeName.ToLower(), type);
+                _types.Add(type);
             }
         }
 
-        public static Message GetMessage(string type, JObject data)
+        public static Message GetMessage(JObject data, string messagename, string type = null) //message name = game_update, types : player count, update status
         {
-            type = type.ToLower();
-            if (!_types.ContainsKey(type))
-                return null;
+            Type obj = null;
+            if (type != null && _types.Any(x => x.FullName.Contains(messagename + "." + type)))
+                obj = _types.Where(x => x.FullName.Contains(messagename + "." + type)).First();
+            else if (_types.Any(x => x.FullName.Contains("NoTypePackets." + messagename)))
+                obj = _types.Where(x => x.FullName.Contains("NoTypePackets." + messagename)).First();
+            else
+            {
+                Console.WriteLine("WTF THERE IS A BIG ISSUE");
+                Console.ReadKey();
+            }
 
-            var t = _types[type];
             Message result = null;
             try
             {
-                result = data.ToObject(t) as Message; // cast le jobject en message
+                result = data.ToObject(obj) as Message; // cast le jobject en message
             }
             catch (Exception ex)
             {

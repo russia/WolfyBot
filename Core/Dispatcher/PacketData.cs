@@ -10,16 +10,18 @@ namespace WolfyBot.Core.Dispatcher
     public class PacketData
     {
         public object Instance;
-        public string Key;
+        public string Messagename;
+        public string Typename;
         public bool RunSynchronously;
         public MethodInfo Methode;
 
-        public PacketData(object instance, string key, bool runSync, MethodInfo method)
+        public PacketData(object instance, string messagename, bool runSync, MethodInfo method, string typename = null)
         {
             this.Instance = instance;
-            this.Key = key;
+            this.Messagename = messagename;
             this.RunSynchronously = runSync;
             this.Methode = method;
+            this.Typename = typename;
         }
     }
 }

@@ -97,10 +97,14 @@ namespace WolfyBot
 
         public void client_OnOpen(object sender, EventArgs e)
         {
-            if (CurrentNetworkState == NetworkEnum.LOGGING_IN)
+            if (CurrentNetworkState == NetworkEnum.LOGGING_IN && !wasWsCloseExpected)
                 CurrentNetworkState = NetworkEnum.LOGGED_HUB;
-            else
-                CurrentNetworkState = NetworkEnum.LOGGED_GAME;
+            else if(CurrentNetworkState == NetworkEnum.LOGGING_IN && wasWsCloseExpected)
+            {
+                wasWsCloseExpected = !wasWsCloseExpected;
+                CurrentNetworkState = NetworkEnum.LOGGED_GAME; 
+            }
+               
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Connection opened at " + ws.Url, ConsoleColor.Blue);
 
             GameHub = new Hub();
@@ -108,45 +112,32 @@ namespace WolfyBot
 
         public void client_OnMessage(object sender, MessageEventArgs e)
         {
+
             Program.TotalNetworkReceivedLength += ulong.Parse(e.RawData.Length.ToString());
             string response = e.Data;
-            if (!response.Contains("hydrateFriendRequests") && response != "3probe" && response != "3" && response != "41") // on remove les messages ws
+
+            Console.WriteLine(response);
+
+            if (response == "3probe" || response == "3" || response == "41") // websocket
+                return;
+
+            if (!response.Contains("{"))
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV STRANGE MSG -> {response}", ConsoleColor.Red);// not json form
+                Reader.StrangeMessageReader(this, response);
+                return;
+            }
+
+            if (!response.Contains("hydrate") && response.StartsWith("42")) // on remove les messages non ws / ilisible
                 Reader.MessageReader(this, response);
             else
-                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV -> {response}", ConsoleColor.DarkCyan);
-
-            // TEMP USED TO SWITCH FROM HUB TO GAME
-
-            if (response.Contains("game_create"))
-            {
-                string message = response;
-                while (!message.StartsWith("[")) //TODO improve this part
-                {
-                    message = message.Remove(0, 1);
-                }
-                while (!message.EndsWith("]"))
-                {
-                    message = message.Remove(message.Length - 1, 1);
-                }
-                string packetname = message.Substring(2, message.IndexOf(",{") - 3);
-                string json = message.Replace($"[\"{packetname}\",", "");
-                json = json.Replace("]", "");
-                var jsonobj = JObject.Parse(json);
-                string id = jsonobj["id"].ToString();
-                string instanceId = jsonobj["instanceId"].ToString();
-                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game has been created, joining it ! GameID : {id}, GameInstanceID : {instanceId}", ConsoleColor.Cyan);
-                Quit();
-                ConnectToWorld(id, instanceId);
-            }
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV -> {response}", ConsoleColor.Red);
         }
 
         public void client_OnClose(object sender, CloseEventArgs e)
         {
             if (!wasWsCloseExpected)
-                CurrentNetworkState = NetworkEnum.DISCONNECTED;
-            else
-                wasWsCloseExpected = !wasWsCloseExpected;
-            
+                CurrentNetworkState = NetworkEnum.DISCONNECTED;            
 
             string response = e.Reason;
             if (response.Length == 0)

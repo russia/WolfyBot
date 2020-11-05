@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using WolfyBot.Core.Types;
 
-namespace WolfyBot.Core.Packets.Hub.game_create 
+namespace WolfyBot.Core.Packets.Hub.NoTypePackets
 {
-    public class GAME_CREATE : Message
+    public class game_create : Message
     {
         public string id { get; set; }
         public string instanceId { get; set; }

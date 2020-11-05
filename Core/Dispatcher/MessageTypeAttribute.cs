@@ -7,14 +7,16 @@ using System.Threading.Tasks;
 namespace WolfyBot.Core.Dispatcher
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    internal class MessageTypeAttribute : Attribute
+    internal class MessageAttribute : Attribute
     {
-        public string Value;
+        public string Message;
+        public string Type;
         public bool runSynchronously;
 
-        public MessageTypeAttribute(string v, bool runsync = false)
+        public MessageAttribute(string messagename,string type = "NoTypePackets", bool runsync = false)
         {
-            this.Value = v;
+            this.Message = messagename;
+            this.Type = type;
             this.runSynchronously = runsync;
         }
     }

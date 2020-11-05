@@ -130,7 +130,7 @@ namespace WolfyBot
             client.HandShakeCookies.Clear();
             foreach (Cookie cookie in responseCookies)
             {
-                Console.WriteLine($"[{DateTime.Now.ToString("HH: mm:ss")}] We got cookies : " + cookie.Name + " -> " + cookie.Value);
+                Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}] We got cookies : " + cookie.Name + " -> " + cookie.Value);
                 client.HandShakeCookies.Add(new WebSocketSharp.Net.Cookie(cookie.Name, cookie.Value));
             }
             client.CurrentNetworkState = NetworkEnum.LOGGING_IN;
