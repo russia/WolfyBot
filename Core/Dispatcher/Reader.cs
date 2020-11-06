@@ -40,15 +40,22 @@ namespace WolfyBot.Core.Dispatcher
 
             if (Type["type"] == null)
             {
-                if (!Methods.Any(x => x.Messagename == packetname))
+                if (!Methods.Any(x => x.Messagename == packetname && x.Typename == "NoTypePackets"))
                 {
                     Program.AddUnknowMsg(message + "\n\n");
                     Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV Message not registered [Name : {packetname} | Type : NOTYPE] -> {json}", ConsoleColor.Yellow);
                     return;
                 }
-                foreach (var method in Methods.Where(x => x.Messagename == packetname)) // on cherche si il y a un handler avec le meme nom de message
+                foreach (var method in Methods.Where(x => x.Messagename == packetname && x.Typename == "NoTypePackets")) // on cherche si il y a un handler avec le meme nom de message
                 {
-                    method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type, packetname) });
+                    try
+                    {
+                        method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type, packetname) });
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
                 return;
             }
@@ -61,17 +68,26 @@ namespace WolfyBot.Core.Dispatcher
             }
 
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV [Name : {packetname} | Type : {Type["type"]}] -> {json}", ConsoleColor.DarkCyan);
-            foreach (var method in Methods.Where(x => x.Typename == Type["type"].ToString())) // on cherche si il y a un handler avec le meme nom de message
+            foreach (var method in Methods.Where(x => x.Messagename == packetname && x.Typename == Type["type"].ToString())) // on cherche si il y a un handler avec le meme nom de message
             {
-                method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type, packetname, Type["type"].ToString()) });
+                try
+                {
+                    method.Methode.Invoke(method.Instance, new object[] { client, MessageBuilder.GetMessage(Type, packetname, Type["type"].ToString()) });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
         }
 
         public static void StrangeMessageReader(Client client, string message)
         {
-            Program.AddUnknowMsg(message + "\n\n");
-            string packetname = message.Substring(4, message.IndexOf("\",") - 3);
+            //Program.AddUnknowMsg(message + "\n\n");
+            string packetname = message.Substring(4, message.IndexOf("\",") - 4);
             Console.WriteLine("Strange packet name parser ! " + packetname);
+            if (packetname == "afkAlert") // anti afk
+                client.SendMessage("42[\"here\"]",1500);
         }
     }
 }

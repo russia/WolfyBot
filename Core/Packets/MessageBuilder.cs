@@ -25,10 +25,22 @@ namespace WolfyBot.Core.Packets
         public static Message GetMessage(JObject data, string messagename, string type = null) //message name = game_update, types : player count, update status
         {
             Type obj = null;
-            if (type != null && _types.Any(x => x.FullName.Contains(messagename + "." + type)))
-                obj = _types.Where(x => x.FullName.Contains(messagename + "." + type)).First();
+            if (type != null && _types.Any(x => x.FullName.Contains(messagename + "." + type))) {
+                var objs = _types.Where(x => x.FullName.Contains(messagename + "." + type));
+                if (objs.Count() != 1)
+                    Console.WriteLine();
+                else
+                    obj = objs.First();
+
+            }
             else if (_types.Any(x => x.FullName.Contains("NoTypePackets." + messagename)))
-                obj = _types.Where(x => x.FullName.Contains("NoTypePackets." + messagename)).First();
+            {
+                var objs = _types.Where(x => x.FullName.Contains("NoTypePackets." + messagename));
+                if (objs.Count() != 1)
+                    Console.WriteLine();
+                else
+                    obj = objs.First();
+            }
             else
             {
                 Console.WriteLine("WTF THERE IS A BIG ISSUE");

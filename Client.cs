@@ -24,6 +24,7 @@ namespace WolfyBot
         public string CurrentGameInstanceId = "";
         public Hub GameHub;
         public bool wasWsCloseExpected = false;
+        public int TotalEloEarned = 0;
 
         public Client(string userToken)
         {
@@ -107,7 +108,7 @@ namespace WolfyBot
                
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Connection opened at " + ws.Url, ConsoleColor.Blue);
 
-            GameHub = new Hub();
+           // GameHub = new Hub();
         }
 
         public void client_OnMessage(object sender, MessageEventArgs e)
@@ -116,7 +117,7 @@ namespace WolfyBot
             Program.TotalNetworkReceivedLength += ulong.Parse(e.RawData.Length.ToString());
             string response = e.Data;
 
-            Console.WriteLine(response);
+            //Console.WriteLine(response);
 
             if (response == "3probe" || response == "3" || response == "41") // websocket
                 return;

@@ -1,4 +1,6 @@
 ﻿-Revoir la partie polling
 -Améliorer le code
 -Game hub object
+-Lire les "stranges" message
+-Commencer a faire l'ia
 

@@ -15,10 +15,10 @@ namespace WolfyBot
         public static bool AreClientsConnectingToGame = true;
         private static void Main(string[] args)
         {
-            Console.Title = "Fudjia's WolfyBot | Network data : ";
+            Console.Title = "Fudjia's WolfyBot";
             Reader.Initialize();
             MessageBuilder.Initialize();
-            Client client = new Client("8cb85bca-72bb-4722-bc16-1548e2e45eed");
+            Client client = new Client("af8b2abe-ae5c-4a51-8f4f-3181481943d5"); //tijem48285@akxpert.com // 8cb85bca-72bb-4722-bc16-1548e2e45eed
             var task = Task.Factory.StartNew(() => client.ConnectToHub());
 
             ClientsManager.ClientList.Add(client);
@@ -41,9 +41,8 @@ namespace WolfyBot
         {
             string formatrcv = TotalNetworkReceivedLength >= 1000000 ? $"{TotalNetworkReceivedLength / 1000000} Mo" : $"{TotalNetworkReceivedLength / 1000} Ko";
             string formatsnd = TotalNetworkSentLength >= 1000000 ? $"{TotalNetworkSentLength / 1000000} Mo" : $"{TotalNetworkSentLength / 1000} Ko";
-            Console.Title = $"[{DateTime.Now.ToString("HH:mm:ss")}] Fudjia's WolfyBot | Network data : [Received : {formatrcv} | Sent : {formatsnd}] Current client state : {ClientsManager.ClientList.First().CurrentNetworkState}";
+            Console.Title = $"[{DateTime.Now.ToString("HH:mm:ss")}] Fudjia's WolfyBot | Network data : [Received : {formatrcv} | Sent : {formatsnd}] Current client state : {ClientsManager.ClientList.First().CurrentNetworkState} | Total Elo earned : {ClientsManager.ClientList.Sum(x => x.TotalEloEarned)}";
         }
-        //TEMP
         private static object jlock = new object();
         public static void AddUnknowMsg(string msg)
         {
