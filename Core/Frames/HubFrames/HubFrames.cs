@@ -1,5 +1,7 @@
 ﻿using System;
 using WolfyBot.Core.Dispatcher;
+using WolfyBot.Core.Game;
+using WolfyBot.Core.Game.Types;
 using WolfyBot.Core.Packets.Hub.game_update;
 using WolfyBot.Core.Packets.Hub.NoTypePackets;
 
@@ -37,6 +39,7 @@ namespace WolfyBot.Core.Frames.HubFrames
                 Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game has been created, joining it ! GameID : {message.id}, GameInstanceID : {message.instanceId}", ConsoleColor.Cyan);
                 client.Quit();
                 client.ConnectToWorld(message.id, message.instanceId);
+                client.InGameIA.PartyPlayers.Add(new PlayerRole(message.adminId));
             }
         }
 

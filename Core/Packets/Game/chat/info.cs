@@ -29,5 +29,8 @@ namespace WolfyBot.Core.Packets.Game.chat
 
         [JsonProperty("userId")]
         public string UserId { get; set; }
+
+        [JsonProperty("word")]
+        public string Word { get; set; }
     }
 }

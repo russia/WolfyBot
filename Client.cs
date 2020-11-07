@@ -23,6 +23,7 @@ namespace WolfyBot
         public string CurrentGameId = "";
         public string CurrentGameInstanceId = "";
         public Hub GameHub;
+        public GameIA InGameIA;
         public bool wasWsCloseExpected = false;
         public int TotalEloEarned = 0;
 
@@ -31,6 +32,7 @@ namespace WolfyBot
             this.ClientStatus = StatesEnum.NONE;
             this.CurrentNetworkState = NetworkEnum.DISCONNECTED;
             this.UserToken = userToken;
+            this.InGameIA = new GameIA(this);
         }
 
         public void ConnectToHub()

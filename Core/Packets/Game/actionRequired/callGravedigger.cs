@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WolfyBot.Core.Packets.Game.actionRequired
 {
-    public class callDictatorAsk : Message
+    public class callGravedigger : Message
     {
         [JsonProperty("id")]
         public string Id { get; set; }

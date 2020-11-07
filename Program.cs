@@ -18,7 +18,7 @@ namespace WolfyBot
             Console.Title = "Fudjia's WolfyBot";
             Reader.Initialize();
             MessageBuilder.Initialize();
-            Client client = new Client("af8b2abe-ae5c-4a51-8f4f-3181481943d5"); //tijem48285@akxpert.com // 8cb85bca-72bb-4722-bc16-1548e2e45eed
+            Client client = new Client("836839f6-e0eb-49db-8bb2-029bc00adc0e"); //tijem48285@akxpert.com // 8cb85bca-72bb-4722-bc16-1548e2e45eed
             var task = Task.Factory.StartNew(() => client.ConnectToHub());
 
             ClientsManager.ClientList.Add(client);

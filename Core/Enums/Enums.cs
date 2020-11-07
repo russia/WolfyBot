@@ -13,4 +13,12 @@
         LOGGED_GAME,
         DISCONNECTED
     }
+
+    public enum GameSide
+    {
+        SOLO,
+        DUO,
+        WEREWOLVES,  
+        VILLAGERS
+    }
 }

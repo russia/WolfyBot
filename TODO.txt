@@ -3,4 +3,10 @@
 -Game hub object
 -Lire les "stranges" message
 -Commencer a faire l'ia
+-Changer de partie si la partie trouvée ne se lance pas rapidement.
+-faire leave le bot de la partie si il meurt
+-add client messages (si je suis deter)
+todo add gg / rip messages at daytime
 
+
+42["chat",{"type":"userMessage","text":"oui et toi","userId":"5a8fdb16-6cce-4226-b692-e6cac706d889","channel":"spectate"}]

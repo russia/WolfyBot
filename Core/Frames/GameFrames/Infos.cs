@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
 using WolfyBot.Core.Dispatcher;
+using WolfyBot.Core.Game;
+using WolfyBot.Core.Game.Types;
 using WolfyBot.Core.Packets.Game.NoTypePackets;
 
 namespace WolfyBot.Core.Frames.GameFrames
@@ -34,6 +37,19 @@ namespace WolfyBot.Core.Frames.GameFrames
         public void HandlestartMessage(Client client, WolfyBot.Core.Packets.Game.NoTypePackets.start message)
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] The game is starting, your role : {message.Role}", ConsoleColor.Magenta);
+
+            client.SendMessage("42[\"writing\",{\"status\":true,\"private\":false}]");
+            client.SendMessage("42[\"writing\",{\"status\":false,\"private\":false}]");
+            client.SendMessage("42[\"chat\",{\"text\":\"salut\",\"private\":false}]");
+
+
+            client.InGameIA.SetGameRole(message.Role);
+            if (message.WerewolvesId == null || !message.WerewolvesId.Any())
+                return;
+
+            foreach (var wolf in message.WerewolvesId)
+                client.InGameIA.AlliesIds.Add(new PlayerRole(wolf));
+            
         }
 
         [MessageAttribute("end")]
@@ -41,6 +57,7 @@ namespace WolfyBot.Core.Frames.GameFrames
         {
             client.TotalEloEarned += message.Elo;
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] The game is done : goodvotes -> {message.Points.GoodVote} | participation -> {message.Points.Participation}", ConsoleColor.Blue);
+            client.InGameIA.Dispose();
         }
 
         [MessageAttribute("death")]
