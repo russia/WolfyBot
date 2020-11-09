@@ -13,16 +13,33 @@ namespace WolfyBot.Core.Game
             Random rnd = new Random();
             return rnd.Next(a, b);
         }
+        public static string CreateSayHelloSentence()
+        {
+            switch (GetRandomInt(1, 4))
+            {
+                case 1:
+                    return "salut";
+                case 2:
+                    return "yop";
+                case 3:
+                    return "Bonjour";
+                case 4:
+                    return "slt";
+            }
+            return "";
+        }
         public static string CreatevoteVillagersSentence()
         {
-            switch (GetRandomInt(1, 3))
+            switch (GetRandomInt(1, 4))
             {
                 case 1:
                     return "j'ai de bonnes infos";
                 case 2:
-                    return "j'ai pu voir certaines choses";
+                    return "j'ai pu voir des choses";
                 case 3:
-                    return "il a un comportement tres suspect";
+                    return "il est suspect";
+                case 4:
+                    return "bon bah cest sur ducoup";
             }
             return ""; 
         }

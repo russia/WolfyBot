@@ -1,12 +1,47 @@
 ﻿-Revoir la partie polling
 -Améliorer le code
--Game hub object
 -Lire les "stranges" message
--Commencer a faire l'ia
 -Changer de partie si la partie trouvée ne se lance pas rapidement.
 -faire leave le bot de la partie si il meurt
 -add client messages (si je suis deter)
-todo add gg / rip messages at daytime
+
 
 
 42["chat",{"type":"userMessage","text":"oui et toi","userId":"5a8fdb16-6cce-4226-b692-e6cac706d889","channel":"spectate"}]
+
+
+
+INF DU BOT :
+
+Strange packet name parser ! newState
+[11:47:26] [Timer : voteWerewolves] 60 seconds left out of 60.
+[11:47:26] RCV [Name : chat | Type : invoke] -> {"type":"invoke","channel":"global","role":"werewolf"}
+[11:47:26] It's werewolf turn.
+[11:47:31] [Timer : voteWerewolves] 15 seconds left out of 60.
+[11:47:42] SND -> 2
+[11:47:48] RCV STRANGE MSG -> 42["newState","postNight"]
+Strange packet name parser ! newState
+[11:47:48] RCV [Name : chat | Type : invoke] -> {"type":"invoke","channel":"global","role":"blackWolf"}
+[11:47:48] It's blackWolf turn.
+[11:47:48] [Timer : callBlackWolf] 30 seconds left out of 30.
+[11:47:51] RCV [Name : chat | Type : info] -> {"type":"info","channel":"private","recipientId":"4d71b716-7bab-4182-9c47-763d6422190b","message":"infected"}
+[11:47:51] Info message : infected, multiple : False
+[11:47:51] RCV [Name : playerUpdate | Type : addWerewolf] -> {"type":"addWerewolf","userId":"4d71b716-7bab-4182-9c47-763d6422190b"}
+[11:47:51] 4d71b716-7bab-4182-9c47-763d6422190b is now a wolf [addWerewolf]
+[11:47:51] RCV [Name : playerUpdate | Type : addWerewolf] -> {"type":"addWerewolf","userId":"dd66e16e-b8c4-4393-93fa-31e8ae852031"}
+[11:47:51] dd66e16e-b8c4-4393-93fa-31e8ae852031 is now a wolf [addWerewolf]
+[11:47:51] RCV [Name : playerUpdate | Type : addWerewolf] -> {"type":"addWerewolf","userId":"415368f8-7aae-4d60-9c48-4b71cff39fcf"}
+[11:47:51] 415368f8-7aae-4d60-9c48-4b71cff39fcf is now a wolf [addWerewolf]
+[11:47:51] RCV [Name : playerUpdate | Type : addWerewolf] -> {"type":"addWerewolf","userId":"3d4db416-993e-4a76-9950-2164ae273be6"}
+[11:47:51] 3d4db416-993e-4a76-9950-2164ae273be6 is now a wolf [addWerewolf]
+[11:47:51] RCV [Name : playerUpdate | Type : addWerewolf] -> {"type":"addWerewolf","userId":"db4cb7a8-b7d4-4903-be22-28b613720ea2"}
+[11:47:51] db4cb7a8-b7d4-4903-be22-28b613720ea2 is now a wolf [addWerewolf]
+[11:47:51] RCV [Name : chat | Type : invoke] -> {"type":"invoke","channel":"global","role":"witch"}
+[11:47:51] It's witch turn.
+[11:47:51] [Timer : callWitch] 30 seconds left out of 30.
+[11:48:07] SND -> 2
+[11:48:09] RCV STRANGE MSG -> 42["newState","day"]
+Strange packet name parser ! newState
+[11:48:09] RCV [Name : chat | Type : dayChange] -> {"type":"dayChange","channel":"global","dayNumber":3}
+[11:48:09] [global] New day number : 3.
+[11:48:09] [Day 3] 1 players are dead. Reason : night

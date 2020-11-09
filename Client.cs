@@ -26,9 +26,11 @@ namespace WolfyBot
         public GameIA InGameIA;
         public bool wasWsCloseExpected = false;
         public int TotalEloEarned = 0;
+        public string Userid;
 
-        public Client(string userToken)
+        public Client(string userToken, string userid)
         {
+            this.Userid = userid;
             this.ClientStatus = StatesEnum.NONE;
             this.CurrentNetworkState = NetworkEnum.DISCONNECTED;
             this.UserToken = userToken;
@@ -126,7 +128,7 @@ namespace WolfyBot
 
             if (!response.Contains("{"))
             {
-                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV STRANGE MSG -> {response}", ConsoleColor.Red);// not json form
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] RCV STRANGE MSG -> {response}", ConsoleColor.White);// not json form
                 Reader.StrangeMessageReader(this, response);
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using WolfyBot.Core.Dispatcher;
 using WolfyBot.Core.Game;
 using WolfyBot.Core.Game.Types;
@@ -21,7 +22,7 @@ namespace WolfyBot.Core.Frames.HubFrames
         public void HandleUPDATE_STATUSType(Client client, UPDATE_STATUS message)
         {
             if (message.Value == 2) // 1 = attente de joueurs 2 = décompte avant départ
-                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game [{message.Id}] just closed !", ConsoleColor.Red);
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game [{message.Id}] just closed !", ConsoleColor.Yellow);
         }
 
         [MessageAttribute("game_update", "SLOTS")]
@@ -36,10 +37,10 @@ namespace WolfyBot.Core.Frames.HubFrames
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game has been created by [{message.admin.username} -> {message.adminId}].", ConsoleColor.Green);
             if (Program.AreClientsConnectingToGame && !message.voice)
             {
+                client.InGameIA.PartyPlayers.Add(new PlayerRole(message.adminId));
                 Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] A game has been created, joining it ! GameID : {message.id}, GameInstanceID : {message.instanceId}", ConsoleColor.Cyan);
                 client.Quit();
                 client.ConnectToWorld(message.id, message.instanceId);
-                client.InGameIA.PartyPlayers.Add(new PlayerRole(message.adminId));
             }
         }
 

@@ -12,7 +12,7 @@ namespace WolfyBot.Core.Game.Types
         public string ActionID { get; set; }
         public bool IsEnded { get; set; }
         public int Timeleft { get; set; }
-
+        public System.Timers.Timer ActionTimer = new System.Timers.Timer();
         public Info Informations { get; set; }
 
         public int DayNumber { get; set; }

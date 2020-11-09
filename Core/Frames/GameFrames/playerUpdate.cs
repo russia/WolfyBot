@@ -14,7 +14,8 @@ namespace WolfyBot.Core.Frames.GameFrames
             if (message.Role != null)
             { // todo improve
                 Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] You are in love with {message.UserId} his role : {message.Role}.", ConsoleColor.Blue);
-                client.InGameIA.InLoveId = new PlayerRole(message.UserId);
+                client.InGameIA.InLoveId = client.InGameIA.PartyPlayers.First(x=> x.Id == message.UserId);
+                client.InGameIA.CurrentRole.Side = Enums.GameSide.DUO;
             }
         }
         [MessageAttribute("playerUpdate", "online")]
@@ -25,12 +26,13 @@ namespace WolfyBot.Core.Frames.GameFrames
 
         [MessageAttribute("playerUpdate", "addWerewolf")]
         public void HandleaddWerewolfType(Client client, addWerewolf message)
-        {//TODO ADD HERE
+        {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] {message.UserId} is now a wolf [{message.Type}]", ConsoleColor.Blue);
+            client.InGameIA.AlliesIds.Add(client.InGameIA.PartyPlayers.First(x => x.Id == message.UserId));
         }
         [MessageAttribute("playerUpdate", "setSick")]
         public void HandlesetSickType(Client client, setSick message)
-        {//TODO ADD HERE
+        {
             if (message.Value)
                 client.InGameIA.SickRatInfected.Add(client.InGameIA.SickRatInfected.First(x => x.Id == message.UserId));
             else

@@ -19,10 +19,12 @@ namespace WolfyBot.Core.Frames.GameFrames
         public void HandleleavechatMessage(Client client, WolfyBot.Core.Packets.Game.chat.leave message)
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] {message.UserId} leave {message.Channel} chat", ConsoleColor.Blue);
-            try { 
-            client.InGameIA.PartyPlayers.Remove(client.InGameIA.PartyPlayers.First(x => x.Id == message.UserId));
+            try
+            {
+                client.InGameIA.PartyPlayers.Remove(client.InGameIA.PartyPlayers.First(x => x.Id == message.UserId));
             }
-            catch { }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+
         }
 
         [MessageAttribute("chat", "userMessage")]
@@ -35,7 +37,8 @@ namespace WolfyBot.Core.Frames.GameFrames
         public void HandleaccusationType(Client client, accusation message)
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Player {message.VoterId} is accusating {message.TargetId} for {message.Text} reason.", ConsoleColor.Blue);
-            client.InGameIA.AccusatedPlayers.Add(new PlayerRole(message.TargetId));
+            if (message.TargetId != client.Userid)
+                client.InGameIA.AccusatedPlayers.Add(client.InGameIA.PartyPlayers.First( x => x.Id == message.TargetId));
         }
 
         [MessageAttribute("chat", "start")]
@@ -48,6 +51,8 @@ namespace WolfyBot.Core.Frames.GameFrames
         public void HandleinvokeType(Client client, WolfyBot.Core.Packets.Game.chat.invoke message)
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] It's {message.Role} turn.", ConsoleColor.Blue);
+            //if(message.Role == "werewolf")
+            //    client.SendMessage("42[\"chat\",{\"text\":\"ripp\",\"private\":false}]");
         }
 
         [MessageAttribute("chat", "info")]
@@ -68,7 +73,7 @@ namespace WolfyBot.Core.Frames.GameFrames
         public void HandlemayorPresentationType(Client client, WolfyBot.Core.Packets.Game.chat.mayorPresentation message)
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] [{message.Channel}] {message.PlayerId} is presenting for {message.Type}. Arguments : {message.Text}", ConsoleColor.Blue);
-            client.InGameIA.MayorCandidates.Add(new PlayerRole(message.PlayerId));
+            client.InGameIA.MayorCandidates.Add(client.InGameIA.PartyPlayers.First(x => x.Id == message.PlayerId));
         }
 
         [MessageAttribute("chat", "mayorVote")]
@@ -82,6 +87,7 @@ namespace WolfyBot.Core.Frames.GameFrames
         {
             Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] [{message.Channel}] New day number : {message.DayNumber}.", ConsoleColor.Blue);
             client.InGameIA.CurrentDayCount = message.DayNumber;
+           // client.InGameIA.SendWord();
         }
 
         [MessageAttribute("chat", "death")]
@@ -92,10 +98,14 @@ namespace WolfyBot.Core.Frames.GameFrames
             {
                 try
                 {
-                    client.InGameIA.PartyPlayers.Remove(client.InGameIA.PartyPlayers.First(x => x.Id == victim.Id));
+                    if (victim.Id == client.Userid)
+                        client.InGameIA.isPlayerAlive = false;
+                    else
+                        client.InGameIA.PartyPlayers.Remove(client.InGameIA.PartyPlayers.First(x => x.Id == victim.Id));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine("[MessageAttribute(chat, death)]" + ex.Message);
                 }
             }
             //on handle deja les msg de morts

@@ -7,6 +7,8 @@ namespace WolfyBot.Core.Game.Types
         private string RoleName { get; set; }
         public GameSide Side { get; set; }
 
+        public string AltRoleName { get; set; }
+
         public Role(string rolename, string side)
         {
             this.RoleName = rolename;
