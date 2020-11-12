@@ -6,24 +6,34 @@ namespace WolfyBot.Core.Game.Types
 {
     public class IAReflection
     {
-        public static string SelectvoteVillagersTarget(GameIA Game) //L'IA est bonne
-        {
-            var CurrentActionInfos = Game.CurrentAction.Informations;
+        public static string SelectvoteVillagersTarget(GameIA Game, string actionID) //L'IA est bonne
+        {//todo un allié peut etre le lg blanc..
+            //faire un classe qui donne la priorité de role a tuer
 
-          
-                if (Game.InLoveId != null && CurrentActionInfos != null
-                    && CurrentActionInfos.Votes.Any(x => x.VoterId.Any()) //si il y a au moins 1 vote
+            if (Game.CurrentRole.targetId != null)
+            {
+                string targetid = Game.CurrentRole.targetId;
+                Game.CurrentRole.targetId = null;
+                return targetid;
+            }
+            var CurrentActionInfos = Game.CurrentActions.First(x => x.ActionID == actionID).Informations;
+
+            //bool isTargetTheLover = Game.InLoveId != null && CurrentActionInfos.Votes.Where(x => x.TargetId != Game.InLoveId.Id).Any();
+            if (CurrentActionInfos != null && CurrentActionInfos.Votes.Any(x => x.VoterId.Any()))
+            {
+                if (Game.InLoveId != null
                     && CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)  //si il existe un vote qui a la majorité
+                                                                                                                      //allies null// && !Game.AlliesIds.Contains(Game.PartyPlayers.First(y => y.Id == x.TargetId))  //si la target n'est pas un allié
                     && x.TargetId != Game.InLoveId.Id// et que ce vote n'est pas contre notre lover
                     && x.TargetId != Game._client.Userid).Any()) // et que ce vote n'est pas contre nous ^^
                     return CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1) && x.TargetId != Game._client.Userid && x.TargetId != Game.InLoveId.Id).First().TargetId; // alors on suit le vote
-         
-                if (Game.InLoveId == null && CurrentActionInfos != null
-                    && CurrentActionInfos.Votes.Any(x => x.VoterId.Any()) //si il y a au moins 1 vote
+
+                if (Game.InLoveId == null
                     && CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)  //si il existe un vote qui a la majorité
+                                                                                                                      //allies null// && !Game.AlliesIds.Contains(Game.PartyPlayers.First(y => y.Id == x.TargetId))  //si la target n'est pas un allié
                     && x.TargetId != Game._client.Userid).Any()) // et que ce vote n'est pas contre nous ^^
                     return CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1) && x.TargetId != Game._client.Userid).First().TargetId; // alors on suit le vote
-           
+            }
             List<PlayerRole> targetlist = Game.PartyPlayers; // sinon on créé une liste de targets
 
             if (Game.CurrentRole.Side == Enums.GameSide.SOLO) // si on joue solo on évite de trop se montrer, on ne vote pas
@@ -44,8 +54,9 @@ namespace WolfyBot.Core.Game.Types
                 return ""; // si on a trouvé aucune cible, on retourne rien
         }
 
-        public static string SelectvoteMayorTarget(GameIA Game) //L'IA est bonne
+        public static string SelectvoteMayorTarget(GameIA Game, string actionID) //L'IA est bonne
         {
+            var CurrentActionInfos = Game.CurrentActions.First(x => x.ActionID == actionID).Informations;
             if (!Game.MayorCandidates.Any()) // si il n'y a aucun candidat
                 return ""; // on vote pas
 
@@ -55,8 +66,8 @@ namespace WolfyBot.Core.Game.Types
             if (Game.InLoveId != null && Game.MayorCandidates.Contains(Game.InLoveId)) //si le lover est un candidat
                 return Game.InLoveId.Id; // on vote pour lui
 
-            if (Game.CurrentAction.Informations.Votes.Any(x => x.VoterId.Any()) && Game.CurrentAction.Informations.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)).Any())
-                return Game.CurrentAction.Informations.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)).First().TargetId;
+            if (CurrentActionInfos.Votes.Any(x => x.VoterId.Any()) && CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)).Any())
+                return CurrentActionInfos.Votes.Where(x => x.VoterId.Count() > ((Game.PartyPlayers.Count() / 2) - 1)).First().TargetId;
 
             if (Game.AlliesIds.Any() && IAHelper.GetUnion(Game.MayorCandidates, Game.AlliesIds).Any()) //si un allier est candidat
                 return IAHelper.GetUnion(Game.MayorCandidates, Game.AlliesIds).First().Id; //
@@ -76,7 +87,7 @@ namespace WolfyBot.Core.Game.Types
                     return temparray.First(x => x.Id != Game.InLoveId.Id).Id;
                 }
                 else
-                    return temparray.OrderBy(x => Guid.NewGuid()).First().Id; 
+                    return temparray.OrderBy(x => Guid.NewGuid()).First().Id;
             }
 
             return Game.PartyPlayers.First().Id; //( loup contre loup)
@@ -84,8 +95,10 @@ namespace WolfyBot.Core.Game.Types
 
         public static string SelectcallWhiteWolfTarget(GameIA Game)
         {
-            //il faut vérifier ici le nombre de loups
-            return Game.PartyPlayers.First().Id;
+            if((Game.AlliesIds.Count() / Game.PartyPlayers.Count()) > 0.5) // si il y a la moitier de lg et la moitier de villageois
+                return Game.PartyPlayers.First(x => x.Id == Game.AlliesIds.First().Id).Id;
+            else
+                return Game.PartyPlayers.First().Id;
         }
 
         public static string SelectcallHunterTarget(GameIA Game) //L'IA est bonne
@@ -104,9 +117,7 @@ namespace WolfyBot.Core.Game.Types
                 && Game.PartyPlayers.Where(x => x.Id != Game.InLoveId.Id).Any())
                 return Game._client.Userid; //on se protege soit meme
 
-
-
-            if(lastTarget == Game._client.Userid)
+            if (lastTarget == Game._client.Userid)
                 return Game.PartyPlayers.First(x => x.Id != lastTarget).Id; //sinon on protege des mecs random
             else
                 return Game._client.Userid; //on se protege soit meme
@@ -114,7 +125,7 @@ namespace WolfyBot.Core.Game.Types
 
         public static string[] SelectcallSickRatTargets(GameIA Game) //L'IA est a tester
         {
-            string[] targets = null;
+            string[] targets = { };
             var notinfected = IAHelper.RemoveBfromA(Game.PartyPlayers, Game.SickRatInfected);
             for (int i = 0; i < 2; i++)
             {
@@ -140,19 +151,16 @@ namespace WolfyBot.Core.Game.Types
 
         public static WitchAction WitchChoiceTarget(GameIA Game, WolfyBot.Core.Packets.Game.actionRequired.callWitch msg)
         {
-            //todo add : !msg.DeathPotionUsed &&
-            if (msg.VictimId == null)
-                return new WitchAction(Game.PartyPlayers.OrderBy(x => Guid.NewGuid()).First().Id, WitchAction.type.death);
+            if (!msg.DeathPotionUsed && msg.VictimId == null)
+                return new WitchAction(Game.PartyPlayers.OrderBy(x => Guid.NewGuid()).First().Id, WitchAction.type.death); // on bute un random
 
-            //Todo add : !msg.HealPotionUsed &&
-            if (msg.VictimId == Game._client.Userid || msg.VictimId == Game.InLoveId.Id) //si le lover ou le bot est la target && que on a pas use la potion
+            if (!msg.HealPotionUsed && msg.VictimId == Game._client.Userid || (Game.InLoveId != null && msg.VictimId == Game.InLoveId.Id)) //si le lover ou le bot est la target && que on a pas use la potion
                 return new WitchAction(msg.VictimId, WitchAction.type.heal); // on le soigne
 
-            //on verif pas l'état des potions
-            if (msg.VictimId != null)
+            if (!msg.HealPotionUsed && msg.VictimId != null)
                 return new WitchAction(msg.VictimId, WitchAction.type.heal);
 
-            return new WitchAction("", WitchAction.type.none); // n'arrive jamais ici vu qu'on verif pas l'état des potions
+            return new WitchAction("", WitchAction.type.none); 
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +22,7 @@ namespace WolfyBot.Helpers
                 var message = await httpClient.PostAsync(uri, content);
                 return message;
             }
-            catch (Exception ex)
+            catch
             {
                 goto retry;
             }
@@ -45,7 +44,7 @@ namespace WolfyBot.Helpers
                 var message = await httpClient.GetAsync(uri);
                 return message;
             }
-            catch (Exception ex)
+            catch
             {
                 Thread.Sleep(1000);
                 retries++;
@@ -67,9 +66,8 @@ namespace WolfyBot.Helpers
                 var message = await httpClient.GetAsync(uri);
                 return message;
             }
-            catch (Exception ex)
+            catch
             {
-                //Console.WriteLine(ex.Message);
                 return null;
             }
         }

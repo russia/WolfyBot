@@ -11,82 +11,72 @@ namespace WolfyBot.Core.Game
     {
         //ne pas oublier que la side change avec l'infection / couple
         public Role CurrentRole;
-
+        public bool isGameRunning = false;
         public Client _client;
-        public GameAction CurrentAction;
+        public List<GameAction> CurrentActions = new List<GameAction>();
         public List<PlayerRole> PartyPlayers = new List<PlayerRole>();
-        public string CurrentMayor = "";
-
         public List<PlayerRole> AlliesIds = new List<PlayerRole>();
         public List<PlayerRole> SickRatInfected = new List<PlayerRole>();
         public List<PlayerRole> MayorCandidates = new List<PlayerRole>();
         public List<PlayerRole> AccusatedPlayers = new List<PlayerRole>();
+        public string CurrentMayor = "";
+        public System.Timers.Timer GameStartTimer = new System.Timers.Timer();
         public PlayerRole InLoveId;
         public int CurrentDayCount;
-        public bool canProcessAction = false;
-        public bool isPlayerAlive = true;
-
-      
 
         public GameIA(Client client)
         {
             _client = client;
+            CurrentActions = new List<GameAction>();
         }
 
         //todo compter le nombre de roles grace aux morts, et utiliser ces infos
-        // il accuse alors que le mec est deja accusé
-        //todo check if we are still alive! ! sauf que le hunter est mort quand il joue...
-        //TODO CHANGE VOTES : CEST PAS TARGET ID MAIS foreach VOTE.targets
-
+        public void GameStartTimerElasped(object source, ElapsedEventArgs e)
+        {
+            GameStartTimer.Enabled = false;
+            if (isGameRunning)
+                return;
+            _client.Reconnect();
+           
+        }
         #region Actions
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.voteVillagers msg)
         {
-            CurrentAction = new GameAction(msg.Id, msg.TimeLeft);
-            CurrentAction.ActionTimer.Elapsed += new ElapsedEventHandler(OnTimedGameActionEvent);
-            CurrentAction.ActionTimer.Interval = msg.TimeLeft - 5000;
-            CurrentAction.ActionTimer.Enabled = true;
-
-            while (!canProcessAction)
+            GameAction action = new GameAction(msg.Id, msg.Type, msg.TimeLeft);
+            CurrentActions.Add(action);
+            if (!CurrentRole.IsAlive)
+                return;
+            while (!action.canProcessAction)
                 Thread.Sleep(150);
+            bool willvote = (CurrentRole.RoleName == "mercenary" || (PartyPlayers.Count() <= 6) || (CurrentDayCount > 1));
 
-            string targetid = IAReflection.SelectvoteVillagersTarget(this);
+            if (!willvote)
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] Not voting -> [CurrentRole.RoleName -> {CurrentRole.RoleName} | PartyPlayers.Count() -> {PartyPlayers.Count()} | CurrentDayCount -> {CurrentDayCount}]", ConsoleColor.DarkCyan, _client);
+                return;
+            }
+           
+            string targetid = IAReflection.SelectvoteVillagersTarget(this, msg.Id);
             if (targetid == "")
                 return;
-            bool willvote = (PartyPlayers.Count() <= 6) || (CurrentDayCount > 1);
-
-            if (!AccusatedPlayers.Any(x=> x.Id == targetid) && willvote)
+            if (!AccusatedPlayers.Any(x => x.Id == targetid))
                 _client.SendMessage("42[\"action\",{\"id\":\"" + msg.Id + "\",\"info\":{\"type\":\"accuse\",\"targetId\":\"" + targetid + "\",\"text\":\"" + Humanizer.CreatevoteVillagersSentence() + "\"}}]", 1000);
-            else if (AccusatedPlayers.Any(x => x.Id == targetid) && willvote)
+            else if (AccusatedPlayers.Any(x => x.Id == targetid))
                 _client.SendMessage("42[\"action\",{\"id\":\"" + msg.Id + "\",\"info\":{\"type\":\"vote\",\"targetId\":\"" + targetid + "\"}}]", 1000);
-            else
-                Console.WriteLine("Not voting, CurrentDayCount -> " + CurrentDayCount);
-        }
-
-        private void OnTimedGameActionEvent(object source, ElapsedEventArgs e)
-        {
-            CurrentAction.ActionTimer.Enabled = false;
-            canProcessAction = true;
-            Console.WriteLine("OnTimedGameActionEvent is called !");
-            Console.WriteLine("Players left : " + PartyPlayers.Count());
-            foreach (var player in PartyPlayers)
-                Console.WriteLine(player.Id);
-            Console.WriteLine("Allies left : " + AlliesIds.Count());
-            foreach (var player in AlliesIds)
-                Console.WriteLine(player.Id);
-        }
+       }
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.voteMayor msg)
         {
-            CurrentAction = new GameAction(msg.Id, msg.TimeLeft);
-            CurrentAction.ActionTimer.Elapsed += new ElapsedEventHandler(OnTimedGameActionEvent);
-            CurrentAction.ActionTimer.Interval = msg.TimeLeft - 10000;
-            CurrentAction.ActionTimer.Enabled = true;
+            GameAction action = new GameAction(msg.Id, msg.Type, msg.TimeLeft);
+            CurrentActions.Add(action);
+            if (!CurrentRole.IsAlive)
+                return;
 
-            while (!canProcessAction)
+            while (!action.canProcessAction)
                 Thread.Sleep(150);
 
-            string target = IAReflection.SelectvoteMayorTarget(this);
+            string target = IAReflection.SelectvoteMayorTarget(this, msg.Id);
             if (target == "")
                 return;
             if (target == _client.Userid)
@@ -97,8 +87,7 @@ namespace WolfyBot.Core.Game
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.voteKick msg)
         {
-            //todo add IA target id selection with role reflection
-            //TODO GET MESSAGE VALUE
+            _client.SendMessage("42[\"action\",{\"id\":\"" + msg.Id + "\",\"info\":{\"vote\":true}}]", 150);
         }
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.callMayorKill msg)
@@ -179,9 +168,12 @@ namespace WolfyBot.Core.Game
             _client.SendMessage("42[\"action\",{\"id\":\"" + msg.Id + "\",\"info\":{\"targetId\":\"" + targetid + "\"}}]", 150);
         }
 
-        public void ProcessAction(WolfyBot.Core.Packets.Game.chat.info msg) //talkative wolf only
+        public void ProcessAction(WolfyBot.Core.Packets.Game.chat.info msg)
         {
-            _client.SendMessage("42[\"chat\",{\"text\":\"" + msg.Word + "\",\"private\":false}]");
+            if (msg.Word != null)
+                _client.SendMessage("42[\"chat\",{\"text\":\"" + msg.Word + "\",\"private\":false}]");
+            if (msg.TargetId != null)
+                CurrentRole.targetId = msg.TargetId;
         }
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.callWhiteWolf msg)
@@ -194,27 +186,38 @@ namespace WolfyBot.Core.Game
 
         public void ProcessAction(WolfyBot.Core.Packets.Game.actionRequired.callGravedigger msg)
         {
-            _client.SendMessage("42[\"action\",{\"id\":\""  +msg.Id+"\",\"info\":{\"targetId\":\""  +PartyPlayers.First().Id+ "\"}}]", 1500);
+            _client.SendMessage("42[\"action\",{\"id\":\"" + msg.Id + "\",\"info\":{\"targetId\":\"" + PartyPlayers.First().Id + "\"}}]", 1500);
         }
 
         public void UpdateAction(WolfyBot.Core.Packets.Game.NoTypePackets.actionUpdate msg)
         {
-            if (CurrentAction == null)
+            if (!CurrentActions.Any(x => x.ActionID == msg.Id))
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] [actionUpdate] This action {msg.Id} isn't in CurrentActions List.", ConsoleColor.DarkYellow, _client);
                 return;
-            CurrentAction.Timeleft = msg.TimeLeft;
-            CurrentAction.Informations = msg.Info;
+            }
+
+            GameAction action = CurrentActions.First(x => x.ActionID == msg.Id);
+            action.Timeleft = msg.TimeLeft;
+            action.Informations = msg.Info;
             if (msg.TimeLeft <= 82000)
-                CurrentAction.ActionTimer.Interval = 500;
+                action.ActionTimer.Interval = 500;
             else
-                CurrentAction.ActionTimer.Interval = msg.TimeLeft - 80000;
+                action.ActionTimer.Interval = msg.TimeLeft - 80000;
         }
 
         public void EndAction(WolfyBot.Core.Packets.Game.NoTypePackets.actionEnd msg)
         {
-            CurrentAction = null;
+            if (!CurrentActions.Any(x => x.ActionID == msg.Id))
+            {
+                Program.WriteColoredLine($"[{DateTime.Now.ToString("HH:mm:ss")}] [actionEnd] This action {msg.Id} isn't in CurrentActions List.", ConsoleColor.DarkYellow, _client);
+                return;
+            }
+            GameAction action = CurrentActions.First(x => x.ActionID == msg.Id);
+            CurrentActions.Remove(action);
+            action = null;
             MayorCandidates.Clear();
             AccusatedPlayers.Clear();
-            canProcessAction = false;
         }
 
         #endregion Actions
@@ -228,14 +231,13 @@ namespace WolfyBot.Core.Game
         {
             CurrentRole = null;
             InLoveId = null;
-            CurrentAction = null;
+            isGameRunning = false;
+            //CurrentActions = null;
             PartyPlayers.Clear();
             AlliesIds.Clear();
-            //EnemiesIds.Clear();
             SickRatInfected.Clear();
             MayorCandidates.Clear();
             AccusatedPlayers.Clear();
-            //todo
         }
     }
 }

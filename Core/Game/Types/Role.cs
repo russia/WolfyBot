@@ -4,13 +4,15 @@ namespace WolfyBot.Core.Game.Types
 {
     public class Role
     {
-        private string RoleName { get; set; }
+        public string RoleName { get; set; }
         public GameSide Side { get; set; }
-
+        public bool IsAlive { get; set; }
+        public string targetId { get; set; }
         public string AltRoleName { get; set; }
 
         public Role(string rolename, string side)
         {
+            this.IsAlive = true;
             this.RoleName = rolename;
             switch (side)
             {

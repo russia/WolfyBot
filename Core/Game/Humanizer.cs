@@ -33,11 +33,11 @@ namespace WolfyBot.Core.Game
             switch (GetRandomInt(1, 4))
             {
                 case 1:
-                    return "j'ai de bonnes infos";
+                    return "si c'est pas lui tuer moi";
                 case 2:
-                    return "j'ai pu voir des choses";
+                    return "cest lui";
                 case 3:
-                    return "il est suspect";
+                    return "suspect";
                 case 4:
                     return "bon bah cest sur ducoup";
             }

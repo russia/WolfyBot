@@ -22,7 +22,7 @@ namespace WolfyBot.Core.Packets
             }
         }
 
-        public static Message GetMessage(JObject data, string messagename, string type = null) //message name = game_update, types : player count, update status
+        public static Message GetMessage(Client client,JObject data, string messagename, string type = null) //message name = game_update, types : player count, update status
         {
             Type obj = null;
             if (type != null && _types.Any(x => x.FullName.Contains(messagename + "." + type))) {
@@ -54,7 +54,7 @@ namespace WolfyBot.Core.Packets
             }
             catch (Exception ex)
             {
-                Program.WriteColoredLine($"unable to process message with type '{type}'\nerror : {ex.Message}\nfull message : \n{data}", ConsoleColor.Red);
+                Program.WriteColoredLine($"unable to process message with type '{type}'\nerror : {ex.Message}\nfull message : \n{data}", ConsoleColor.Red, client);
             }
 
             return result;
